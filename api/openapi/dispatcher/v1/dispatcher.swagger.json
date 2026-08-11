@@ -1,0 +1,147 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Dispatcher",
+    "description": "Allows processing of payment events via webhook.",
+    "version": "1.0"
+  },
+  "tags": [
+    {
+      "name": "Dispatcher",
+      "description": "Service that processes payment events via webhook."
+    }
+  ],
+  "host": "localhost:8080",
+  "schemes": [
+    "http"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/dispatch": {
+      "post": {
+        "summary": "Dispatches a payment processing request.",
+        "description": "This endpoint accepts payment processing requests via webhook.",
+        "operationId": "DispatcherService_Dispatch",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1DispatchResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "403": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/googleRpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1DispatchRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Dispatcher"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "dispatcherV1Status": {
+      "type": "string",
+      "enum": [
+        "StatusUndefined",
+        "StatusPending",
+        "StatusProcessing",
+        "StatusCompleted",
+        "StatusFailed",
+        "StatusDropped"
+      ],
+      "default": "StatusUndefined"
+    },
+    "googleRpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "protobufNullValue": {
+      "type": "string",
+      "enum": [
+        "NULL_VALUE"
+      ],
+      "default": "NULL_VALUE",
+      "description": "`NullValue` is a singleton enumeration to represent the null value for the\n`Value` type union.\n\nThe JSON representation for `NullValue` is JSON `null`.\n\n - NULL_VALUE: Null value."
+    },
+    "v1DispatchRequest": {
+      "type": "object",
+      "properties": {
+        "event_type": {
+          "type": "string"
+        },
+        "destination_url": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        }
+      }
+    },
+    "v1DispatchResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/dispatcherV1Status"
+        },
+        "job_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
