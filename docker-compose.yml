@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080" # HTTP
+      - "8081:8081" # gRPC
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+  db:
+    image: postgres:17-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=webhooks
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d webhooks" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  accepter:
+    build:
+      context: .
+      dockerfile: Dockerfile_accepter
+    ports:
+      - "8090:8090" # HTTP
+    depends_on:
+      - app
+
+  rejecter:
+    build:
+      context: .
+      dockerfile: Dockerfile_rejecter
+    ports:
+      - "8091:8091" # HTTP
+    depends_on:
+      - app
+
+
+volumes:
+  postgres_data:
